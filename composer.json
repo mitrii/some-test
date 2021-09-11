@@ -1,0 +1,14 @@
+{
+    "name": "mitrii/twin-test",
+    "description": "Sort CSV",
+    "minimum-stability": "stable",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "mitrii",
+            "email": "p.mitrii@gmail.com"
+        }
+    ],
+    "require": {
+    }
+}
