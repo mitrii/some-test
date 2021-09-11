@@ -9,6 +9,7 @@
             "email": "p.mitrii@gmail.com"
         }
     ],
-    "require": {
+    "require-dev": {
+        "pestphp/pest": "^1.18"
     }
 }
