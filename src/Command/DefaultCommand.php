@@ -2,7 +2,9 @@
 
 namespace App\Command;
 
+use Prophecy\Argument;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -13,7 +15,7 @@ class DefaultCommand extends Command
 
     protected function configure(): void
     {
-        // ...
+        $this->addArgument('directory', InputArgument::REQUIRED, 'Directory');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

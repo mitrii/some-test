@@ -28,8 +28,16 @@ class DefaultCommandTest extends TestCase
 
     public function testExecute()
     {
-        $this->commandTester->execute([]);
+        $this->commandTester->execute(['directory' => __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'storage']);
 
-        $this->assertEquals('', trim($this->commandTester->getDisplay()));
+        $this->assertEquals(
+            <<<CSV
+ID,Price
+1,0.1
+1,0.1
+2,0.1
+3,0.5
+CSV,
+            trim($this->commandTester->getDisplay()));
     }
 }
