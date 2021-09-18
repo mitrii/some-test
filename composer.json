@@ -15,7 +15,10 @@
         "phpunit/phpunit": "^9.5"
     },
     "require": {
-        "symfony/console": "^5.3"
+        "symfony/console": "^5.3",
+        "react/stream": "^1.2",
+        "league/flysystem": "^2.2",
+        "league/mime-type-detection": "^1.7"
     },
     "autoload": {
         "psr-4": {
