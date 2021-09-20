@@ -20,8 +20,8 @@ return [
     // BST
     \App\BinaryTree\BinarySearchTreeInterface::class => DI\factory(function() {
         return new \App\BinaryTree\BinarySearchTree(
-            Closure::fromCallable(new \App\BinaryTree\GreaterAssert()),
-            Closure::fromCallable(new \App\BinaryTree\SmallerAssert()),
+            Closure::fromCallable(new \App\Comparison\PriceGreaterComparison()),
+            Closure::fromCallable(new \App\Comparison\PriceLessComparison()),
         );
     }),
 

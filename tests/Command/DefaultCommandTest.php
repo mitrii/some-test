@@ -36,8 +36,8 @@ class DefaultCommandTest extends TestCase
             $filesystem,
             new ExtensionMimeTypeDetector(),
             new BinarySearchTree(
-                Closure::fromCallable(new \App\BinaryTree\GreaterAssert()),
-                Closure::fromCallable(new \App\BinaryTree\SmallerAssert()),
+                Closure::fromCallable(new \App\Comparison\PriceGreaterComparison()),
+                Closure::fromCallable(new \App\Comparison\PriceLessComparison()),
             )
         )]);
 
@@ -58,9 +58,25 @@ class DefaultCommandTest extends TestCase
         $this->assertEquals(Command::FAILURE, $this->commandTester->getStatusCode());
     }
 
-    public function testExecute()
+    public function testSimpleExecute()
     {
-        $this->commandTester->execute(['dir' => './tests/storage', '--rows' => 5, '--ids' => 2]);
+        $this->commandTester->execute(['dir' => './tests/storage/simple', '--rows' => 5, '--ids' => 2]);
+
+        $this->assertEquals(
+            <<<CSV
+ID,Price
+1,0.1
+1,0.1
+2,0.1
+3,0.5
+4,0.5
+CSV,
+            trim($this->commandTester->getDisplay()));
+    }
+
+    public function testComplexExecute()
+    {
+        $this->commandTester->execute(['dir' => './tests/storage/complex', '--rows' => 1000, '--ids' => 5]);
 
         $this->assertEquals(
             <<<CSV
