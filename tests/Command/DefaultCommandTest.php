@@ -60,7 +60,7 @@ class DefaultCommandTest extends TestCase
 
     public function testExecute()
     {
-        $this->commandTester->execute(['dir' => './tests/storage']);
+        $this->commandTester->execute(['dir' => './tests/storage', '--rows' => 5, '--ids' => 2]);
 
         $this->assertEquals(
             <<<CSV

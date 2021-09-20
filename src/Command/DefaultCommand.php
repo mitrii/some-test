@@ -35,6 +35,8 @@ class DefaultCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('dir', InputArgument::REQUIRED, 'Path to cvs files directory');
+        $this->addOption('rows', 'r', InputOption::VALUE_REQUIRED, 'Rows count in result', 1000);
+        $this->addOption('ids', 'i', InputOption::VALUE_REQUIRED, 'Max IDs duplicates', 5);
         $this->addOption('processes', 'p', InputOption::VALUE_OPTIONAL, 'Number of processes', 4);
     }
 
@@ -57,6 +59,9 @@ class DefaultCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $dir = realpath($input->getArgument('dir'));
+        $rowsCount = (int) $input->getOption('rows');
+        $idsCount = (int) $input->getOption('ids');
+
         $procs = $input->getOption('processes');
 
         if ($dir === false) {
@@ -123,12 +128,12 @@ class DefaultCommand extends Command
              * @var array{ID: int, Price: float} $data
              */
 
-            if ($this->counts[$data['ID']] <= 2) {
+            if ($this->counts[$data['ID']] <= $idsCount) {
                 $count++;
                 $output->writeln(sprintf('%d,%01.1f', $data['ID'], $data['Price']));
             }
 
-            if ($count === 5) {
+            if ($count === $rowsCount) {
                 break;
             }
         }
