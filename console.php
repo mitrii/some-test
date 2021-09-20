@@ -6,17 +6,16 @@ require __DIR__.'/vendor/autoload.php';
 use App\Command\DefaultCommand;
 use Symfony\Component\Console\Application;
 
+$builder = new \DI\ContainerBuilder();
+$builder->addDefinitions(__DIR__ . '/config/di.php');
+//$builder->enableCompilation(__DIR__ . '/runtime');
+//$builder->writeProxiesToFile(true, __DIR__ . '/runtime/proxies');
+$container = $builder->build();
+
 // Symfony Console Application
 $application = new Application('app', '1.0.0');
 
-// ReactPHP
-$loop = React\EventLoop\Loop::get();
-
-// Flysystem
-$adapter = new League\Flysystem\Local\LocalFilesystemAdapter("/");
-$filesystem = new League\Flysystem\Filesystem($adapter);
-
-$command = new DefaultCommand(DefaultCommand::getDefaultName(), $loop, $filesystem);
+$command = $container->make(DefaultCommand::class, ['name' => DefaultCommand::getDefaultName()]);
 
 $application->add($command);
 

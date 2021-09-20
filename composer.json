@@ -12,13 +12,16 @@
     "require-dev": {
         "roave/security-advisories": "dev-latest",
         "vimeo/psalm": "^4.10",
-        "phpunit/phpunit": "^9.5"
+        "phpunit/phpunit": "^9.5",
+        "codedungeon/phpunit-result-printer": "^0.31.0"
     },
     "require": {
         "symfony/console": "^5.3",
         "react/stream": "^1.2",
         "league/flysystem": "^2.2",
-        "league/mime-type-detection": "^1.7"
+        "league/mime-type-detection": "^1.7",
+        "react/child-process": "^0.6.3",
+        "php-di/php-di": "^6.3"
     },
     "autoload": {
         "psr-4": {
