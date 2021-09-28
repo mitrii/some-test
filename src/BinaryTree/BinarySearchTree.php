@@ -11,16 +11,17 @@ class BinarySearchTree implements BinarySearchTreeInterface
 {
     public ?BinaryNode $root;
 
-    protected Closure $greaterCallback;
+    protected $greaterCallback;
 
-    protected Closure $smallerCallback;
+    protected $smallerCallback;
 
+    public $count = 0;
 
     /**
      * @param Closure|null $greaterCallback
      * @param Closure|null $smallerCallback
      */
-    public function __construct(Closure $greaterCallback = null, Closure $smallerCallback = null)
+    public function __construct(callable $greaterCallback = null, callable $smallerCallback = null)
     {
         $this->greaterCallback = $greaterCallback ?? static function(?int $a, ?int $b): bool { return $a > $b; };
         $this->smallerCallback = $smallerCallback ?? static function(?int $a, ?int $b): bool { return $a < $b; };
@@ -67,6 +68,8 @@ class BinarySearchTree implements BinarySearchTreeInterface
      */
     public function insert($data): ?NodeInterface
     {
+
+        $this->count++;
 
         if ($this->isEmpty()) {
             $node = new BinaryNode($data);

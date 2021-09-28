@@ -1,12 +1,12 @@
 <?php
 
+use App\File\FileReaderInterface;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemOperator;
 use League\MimeTypeDetection\MimeTypeDetector;
+use Symfony\Component\Console\Application;
 
 return [
-    // ReactPHP
-    \React\EventLoop\LoopInterface::class => DI\factory('React\EventLoop\Loop::get'),
 
     // Flysystem
     FilesystemAdapter::class => static function() {
@@ -17,11 +17,15 @@ return [
     },
     MimeTypeDetector::class => DI\create(\League\MimeTypeDetection\ExtensionMimeTypeDetector::class),
 
+    FileReaderInterface::class => static function(string $filepath, FilesystemOperator $fs) {
+        return new \App\File\CsvFileReader($filepath, $fs);
+    },
+
     // BST
     \App\BinaryTree\BinarySearchTreeInterface::class => DI\factory(function() {
         return new \App\BinaryTree\BinarySearchTree(
-            Closure::fromCallable(new \App\Comparison\PriceGreaterComparison()),
-            Closure::fromCallable(new \App\Comparison\PriceLessComparison()),
+            new \App\Comparison\PriceGreaterComparison,
+            new \App\Comparison\PriceLessComparison,
         );
     }),
 

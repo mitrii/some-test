@@ -13,15 +13,17 @@
         "roave/security-advisories": "dev-latest",
         "vimeo/psalm": "^4.10",
         "phpunit/phpunit": "^9.5",
-        "codedungeon/phpunit-result-printer": "^0.31.0"
+        "codedungeon/phpunit-result-printer": "^0.31.0",
+        "swoole/ide-helper": "@dev"
     },
     "require": {
+        "ext-swoole": "*",
         "symfony/console": "^5.3",
-        "react/stream": "^1.2",
         "league/flysystem": "^2.2",
         "league/mime-type-detection": "^1.7",
-        "react/child-process": "^0.6.3",
-        "php-di/php-di": "^6.3"
+        "php-di/php-di": "^6.3",
+        "wyrihaximus/react-child-process-pool": "^1.8",
+        "wyrihaximus/react-child-process-messenger": "^4.0"
     },
     "autoload": {
         "psr-4": {

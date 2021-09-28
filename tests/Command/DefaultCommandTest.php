@@ -11,7 +11,6 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\MimeTypeDetection\ExtensionMimeTypeDetector;
 use League\MimeTypeDetection\MimeTypeDetector;
 use PHPUnit\Framework\TestCase;
-use React\EventLoop\Loop;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -25,14 +24,12 @@ class DefaultCommandTest extends TestCase
     protected function setUp(): void
     {
         $application = new Application();
-        $loop = Loop::get();
 
         $adapter = new LocalFilesystemAdapter('/');
         $filesystem = new Filesystem($adapter);
 
         $application->addCommands([new DefaultCommand(
             self::COMMAND_NAME,
-            $loop,
             $filesystem,
             new ExtensionMimeTypeDetector(),
             new BinarySearchTree(

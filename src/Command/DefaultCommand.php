@@ -2,28 +2,22 @@
 
 namespace App\Command;
 
-use App\BinaryTree\BinarySearchTree;
 use App\BinaryTree\BinarySearchTreeInterface;
-use League\Flysystem\Filesystem;
+use App\File\CsvFileReader;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\FilesystemReader;
-use League\Flysystem\StorageAttributes;
-use League\MimeTypeDetection\ExtensionMimeTypeDetector;
 use League\MimeTypeDetection\MimeTypeDetector;
-use React\ChildProcess\Process;
-use React\EventLoop\LoopInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+
 class DefaultCommand extends Command
 {
     // the name of the command (the part after "bin/console")
     protected static $defaultName = 'app:default';
-
-    private LoopInterface $loop;
 
     private FilesystemOperator $fs;
 
@@ -32,29 +26,29 @@ class DefaultCommand extends Command
     private BinarySearchTreeInterface $tree;
     private MimeTypeDetector $mtDetector;
 
+
     protected function configure(): void
     {
         $this->addArgument('dir', InputArgument::REQUIRED, 'Path to cvs files directory');
         $this->addOption('rows', 'r', InputOption::VALUE_REQUIRED, 'Rows count in result', 1000);
         $this->addOption('ids', 'i', InputOption::VALUE_REQUIRED, 'Max IDs duplicates', 5);
-        $this->addOption('processes', 'p', InputOption::VALUE_OPTIONAL, 'Number of processes', 4);
+        $this->addOption('threads', 't', InputOption::VALUE_OPTIONAL, 'Number of threads', 4);
     }
 
     public function __construct(
         string $name,
-        LoopInterface $loop,
         FilesystemOperator $fs,
         MimeTypeDetector $mtDetector,
         BinarySearchTreeInterface $tree
     )
     {
         parent::__construct($name);
-        $this->loop = $loop;
         $this->fs = $fs;
 
         $this->tree = $tree;
         $this->mtDetector = $mtDetector;
     }
+
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -62,62 +56,64 @@ class DefaultCommand extends Command
         $rowsCount = (int) $input->getOption('rows');
         $idsCount = (int) $input->getOption('ids');
 
-        $procs = $input->getOption('processes');
+        $threads = (int) $input->getOption('threads');
 
         if ($dir === false) {
             $output->writeln('Invalid dir');
             return self::FAILURE;
         }
 
-        $files = $this->fs->listContents($dir, FilesystemReader::LIST_DEEP)
-            ->filter(function (StorageAttributes $attributes) {
-                return $attributes->isFile() && $this->mtDetector->detectMimeTypeFromPath($attributes->path()) === 'text/csv';
-            });
+        $filesChan = new \Swoole\Coroutine\Channel($threads);
+        $linesChan = new \Swoole\Coroutine\Channel($threads);
 
 
-        /**
-         * @var StorageAttributes $file
-         */
-        foreach ($files as $file)
-        {
+        $starttime = microtime(true);
 
-            $row = 0;
-            if (($handle = $this->fs->readStream($file->path()))) {
-                while (($cols = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                    if ($cols === null) {
-                        continue;
-                    }
-
-                    $row++;
-                    if ($row === 1) {
-                        $colsHeader = array_flip($cols);
-                        continue;
-                    }
-
-                    $data = [];
-                    foreach ($colsHeader as $header => $key)
-                    {
-                        $data[$header] = $cols[$key];
-                    }
-
-                    $this->tree->insert($data);
+        \Co\run(function ($dir, $fs) use ($filesChan) {
+            foreach ($fs->listContents($dir, FilesystemReader::LIST_DEEP) as $attrs) {
+                if (!$attrs->isFile() || $this->mtDetector->detectMimeTypeFromPath($attrs->path()) !== 'text/csv') {
+                    continue;
                 }
-                fclose($handle);
+                $filesChan->push(['filename' => $attrs->path()]);
             }
+            $filesChan->push(false);
+        }, $dir, $this->fs);
 
-            /*
-            $childProcess = new Process(PHP_BINARY .  . $file->path() );
-            $childProcess->start();
 
-            $childProcess->stdout->on('cols', function ($chunk) {
-                echo $chunk;
-            });
+        \Co\run(function ($fs) use ( $filesChan, $linesChan) {
+            while(1) {
+                $data = $filesChan->pop();
+                if ($data === false) {
+                    $filesChan->close();
+                    $linesChan->push(false);
+                    break;
+                }
 
-            $childProcess->on('exit', function($exitCode, $termSignal) {
-                echo 'Process exited with code ' . $exitCode . PHP_EOL;
-            });
-            */
-        }
+                $filereader = new CsvFileReader($data['filename'], $fs);
+                foreach ($filereader->read() as $lineData)
+                {
+                    $linesChan->push($lineData);
+                }
+            }
+        }, $this->fs);
+
+
+
+        \Co\run(function ($tree) use ($linesChan) {
+            while(1) {
+                $data = $linesChan->pop();
+                if ($data === false) {
+                    $linesChan->close();
+                    break;
+                }
+
+                $tree->insert($data);
+            }
+        }, $this->tree);
+
+
+        $output->writeln(microtime(true) - $starttime);
+
 
         $output->writeln('ID,Price');
         $count = 0;
@@ -138,6 +134,7 @@ class DefaultCommand extends Command
             }
         }
 
+        $output->writeln(microtime(true) - $starttime);
         return Command::SUCCESS;
     }
 }

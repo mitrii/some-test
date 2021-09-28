@@ -30,6 +30,4 @@ interface NodeInterface
     public function successor(): ?NodeInterface;
 
     public function predecessor(): ?NodeInterface;
-
-    public function delete(): void;
 }

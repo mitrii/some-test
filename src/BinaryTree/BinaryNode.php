@@ -69,45 +69,6 @@ class BinaryNode implements NodeInterface
         return null;
     }
 
-    public function delete(): void
-    {
-        $node = $this;
-        if ($node->left === null && $node->right === null && $node->parent() !== null ) {
-            if ($node->parent->left() === $node) {
-                $node->parent()->left = null;
-            } else {
-                $node->parent()->right = null;
-            }
-        } elseif ($node->left() !== null && $node->right() !== null) {
-            $successor = $node->successor();
-            if ($successor !== null) {
-                $node->data = $successor->data();
-                $successor->delete();
-            }
-        } elseif ($node->left !== null && $node->parent !== null) {
-            if ($node->parent()->left() === $node) {
-                $node->parent()->left = $node->left();
-                $node->left()->parent = $node->parent()->left();
-            } else {
-                /** @noinspection PhpSuspiciousNameCombinationInspection */
-                $node->parent()->right = $node->left();
-                $node->left()->parent = $node->parent()->right();
-            }
-            $node->left = null;
-        } elseif ($node->right() !== null && $node->parent() !== null) {
-
-            if ($node->parent()->left() === $node) {
-                /** @noinspection PhpSuspiciousNameCombinationInspection */
-                $node->parent()->left = $node->right();
-                $node->right()->parent = $node->parent->left();
-            } else {
-                $node->parent()->right = $node->right();
-                $node->right()->parent = $node->parent()->right();
-            }
-            $node->right = null;
-        }
-    }
-
     public function parent(): ?NodeInterface
     {
         return $this->parent;
