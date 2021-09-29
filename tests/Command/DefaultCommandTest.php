@@ -70,20 +70,4 @@ ID,Price
 CSV,
             trim($this->commandTester->getDisplay()));
     }
-
-    public function testComplexExecute()
-    {
-        $this->commandTester->execute(['dir' => './tests/storage/complex', '--rows' => 1000, '--ids' => 5]);
-
-        $this->assertEquals(
-            <<<CSV
-ID,Price
-1,0.1
-1,0.1
-2,0.1
-3,0.5
-4,0.5
-CSV,
-            trim($this->commandTester->getDisplay()));
-    }
 }

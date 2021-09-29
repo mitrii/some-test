@@ -4,8 +4,6 @@
 use App\Command\DefaultCommand;
 use Symfony\Component\Console\Application;
 
-\Swoole\Coroutine::set(['enable_deadlock_check' => false]);
-
 $container = require (__DIR__ . '/bootstrap.php');
 
 // Symfony Console Application

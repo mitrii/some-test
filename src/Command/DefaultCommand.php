@@ -13,7 +13,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-
 class DefaultCommand extends Command
 {
     // the name of the command (the part after "bin/console")
@@ -63,53 +62,57 @@ class DefaultCommand extends Command
             return self::FAILURE;
         }
 
-        $filesChan = new \Swoole\Coroutine\Channel($threads);
-        $linesChan = new \Swoole\Coroutine\Channel($threads);
-
-
         $starttime = microtime(true);
 
-        \Co\run(function ($dir, $fs) use ($filesChan) {
-            foreach ($fs->listContents($dir, FilesystemReader::LIST_DEEP) as $attrs) {
-                if (!$attrs->isFile() || $this->mtDetector->detectMimeTypeFromPath($attrs->path()) !== 'text/csv') {
-                    continue;
+
+        \Co\run(function($dir) use ($threads){
+            $filesChan = new \Swoole\Coroutine\Channel($threads);
+            $linesChan = new \Swoole\Coroutine\Channel($threads);
+
+            go(static function ($dir, $fs, $mtDetector) use ($filesChan) {
+                foreach ($fs->listContents($dir, FilesystemReader::LIST_DEEP) as $attrs) {
+                    if (!$attrs->isFile() || $mtDetector->detectMimeTypeFromPath($attrs->path()) !== 'text/csv') {
+                        continue;
+                    }
+                    $filesChan->push(['filename' => $attrs->path()]);
                 }
-                $filesChan->push(['filename' => $attrs->path()]);
-            }
-            $filesChan->push(false);
-        }, $dir, $this->fs);
+                $filesChan->push(false);
+            }, $dir, $this->fs, $this->mtDetector);
 
 
-        \Co\run(function ($fs) use ( $filesChan, $linesChan) {
-            while(1) {
-                $data = $filesChan->pop();
-                if ($data === false) {
-                    $filesChan->close();
-                    $linesChan->push(false);
-                    break;
+            go(static function ($fs) use ( $filesChan, $linesChan) {
+                while(1) {
+                    $data = $filesChan->pop();
+                    if ($data === false) {
+                        $filesChan->close();
+                        $linesChan->push(false);
+                        break;
+                    }
+
+                    $filereader = new CsvFileReader($data['filename'], $fs);
+                    foreach ($filereader->read() as $lineData)
+                    {
+                        $linesChan->push($lineData);
+                    }
                 }
+            }, $this->fs);
 
-                $filereader = new CsvFileReader($data['filename'], $fs);
-                foreach ($filereader->read() as $lineData)
-                {
-                    $linesChan->push($lineData);
+
+
+            go(static function ($tree) use ($linesChan) {
+                while(1) {
+                    $data = $linesChan->pop();
+                    if ($data === false) {
+                        $linesChan->close();
+                        break;
+                    }
+
+                    $tree->insert($data);
                 }
-            }
-        }, $this->fs);
+            }, $this->tree);
+        }, $dir);
 
 
-
-        \Co\run(function ($tree) use ($linesChan) {
-            while(1) {
-                $data = $linesChan->pop();
-                if ($data === false) {
-                    $linesChan->close();
-                    break;
-                }
-
-                $tree->insert($data);
-            }
-        }, $this->tree);
 
 
         $output->writeln(microtime(true) - $starttime);
