@@ -15,11 +15,9 @@ class BinarySearchTree implements BinarySearchTreeInterface
 
     protected $smallerCallback;
 
-    public $count = 0;
-
     /**
-     * @param Closure|null $greaterCallback
-     * @param Closure|null $smallerCallback
+     * @param callable|null $greaterCallback
+     * @param callable|null $smallerCallback
      */
     public function __construct(callable $greaterCallback = null, callable $smallerCallback = null)
     {
@@ -68,9 +66,6 @@ class BinarySearchTree implements BinarySearchTreeInterface
      */
     public function insert($data): ?NodeInterface
     {
-
-        $this->count++;
-
         if ($this->isEmpty()) {
             $node = new BinaryNode($data);
             $this->root = $node;

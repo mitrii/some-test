@@ -106,16 +106,10 @@ class DefaultCommand extends Command
                         $linesChan->close();
                         break;
                     }
-
                     $tree->insert($data);
                 }
             }, $this->tree);
         }, $dir);
-
-
-
-
-        $output->writeln(microtime(true) - $starttime);
 
 
         $output->writeln('ID,Price');
@@ -137,7 +131,6 @@ class DefaultCommand extends Command
             }
         }
 
-        $output->writeln(microtime(true) - $starttime);
         return Command::SUCCESS;
     }
 }
